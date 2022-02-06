@@ -60,3 +60,14 @@ let hmacCustomDigest : Hmac.Hmac = Hmac.new(key, object {
 hmacCustomDigest.write([ /* Nat8 data */ ]);
 result := hmacCustomDigest.sum();
 ```
+
+RIPEMD160:
+
+```motoko
+import Ripemd160 "src/Ripemd160";
+
+let digest : Ripemd160.Digest = Ripemd160.Digest();
+digest.write([ /* Nat8 data */ ]);
+digest.write([ /* Nat8 data */ ]);
+let result : [Nat8] = digest.sum();
+```
