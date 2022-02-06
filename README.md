@@ -2,6 +2,12 @@
 
 ## Testing
 
+Pull dependencies
+
+```
+git submodule update --init
+```
+
 Run all tests
 
 ```

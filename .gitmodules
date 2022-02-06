@@ -1,0 +1,3 @@
+[submodule "motoko-sha"]
+	path = motoko-sha
+	url = git@github.com:tgalal/motoko-sha.git
