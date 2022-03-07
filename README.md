@@ -71,3 +71,11 @@ digest.write([ /* Nat8 data */ ]);
 digest.write([ /* Nat8 data */ ]);
 let result : [Nat8] = digest.sum();
 ```
+
+P2PKH Address Derivation
+
+```motoko
+import Address "src/Address";
+
+let result : Text = Address.keyToP2pkh([ /* Nat8 data */ ]);
+```
