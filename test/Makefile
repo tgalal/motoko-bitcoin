@@ -10,7 +10,7 @@ TEST_TARGETS = $(patsubst %.mo,_out/%.checked,$(TESTS))
 
 all: $(TEST_TARGETS) 
 
-STDLIB_FILES= $(wildcard $(STDLIB)/*.mo)
+STDLIB_FILES= $(wildcard $(STDLIB)/**/*.mo)
 
 VESSEL_PKGS= $(shell vessel sources)
 
