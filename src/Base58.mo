@@ -1,6 +1,7 @@
 import Text "mo:base/Text";
 import Char "mo:base/Char";
 import Nat8 "mo:base/Nat8";
+import Nat32 "mo:base/Nat32";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 
@@ -12,6 +13,131 @@ module {
     'a','b','c','d','e','f','g','h','i','j','k','m','n','o','p','q','r',
     's','t','u','v','w','x','y','z'
   ];
+
+  private let mapBase58 : [Nat8] = [
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255, 255, 0,
+    1, 2, 3, 4, 5, 6, 7, 8,255,255,255,255,255,255, 255, 9,10,11,12,13,14,15,
+    16,255,17,18,19,20,21,255, 22,23,24,25,26,27,28,29,
+    30,31,32,255,255,255,255,255, 255,33,34,35,36,37,38,39,
+    40,41,42,43,255,44,45,46, 47,48,49,50,51,52,53,54,
+    55,56,57,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255, 255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255,
+  ];
+
+  public func decode(input : Text) : [Nat8] {
+    let inputIter : Iter.Iter<Char> = input.chars();
+    var current : ?Char = inputIter.next();
+    var spaces : Nat = 0;
+
+    // Skip leading spaces
+    label l loop {
+      switch(current) {
+        case (?' ') {
+          spaces := spaces + 1;
+        };
+        case (_) {
+          break l;
+        };
+      };
+      current := inputIter.next();
+    };
+
+    // Skip and count leading '1's.
+    var zeroes : Nat = 0;
+    var length : Nat = 0;
+
+    label l loop {
+      switch(current) {
+        case (?'1') {
+          zeroes := zeroes + 1;
+        };
+        case (_) {
+          break l;
+        };
+      };
+      current := inputIter.next();
+    };
+
+    // log(58) / log(256), rounded up.
+    let size : Nat = (input.size() - zeroes - spaces) * 733/1000 + 1;
+    let b256 : [var Nat8] = Array.init<Nat8>(size, 0x00);
+
+    label l loop {
+      switch(current) {
+        case (?' ') {
+          break l;
+        };
+        case (null) {
+          break l;
+        };
+        case (?value) {
+          var carry : Nat = Nat8.toNat(
+            mapBase58[Nat32.toNat(Char.toNat32(value))]);
+          assert(carry != 0xff);
+
+          var i : Nat = 0;
+          var b256Pointer : Nat = b256.size() - 1;
+          label reverseIter while (carry != 0 or i < length) {
+
+
+            carry += 58 * Nat8.toNat(b256[b256Pointer]);
+            b256[b256Pointer] := Nat8.fromNat(carry % 256);
+            carry /= 256;
+            i += 1;
+
+            if (b256Pointer == 0) {
+              break reverseIter;
+            };
+            b256Pointer -= 1;
+          };
+
+          assert(carry == 0);
+          length := i;
+        };
+      };
+      current := inputIter.next();
+    };
+
+    // Skip trailing spaces.
+    label l loop {
+      switch(current) {
+        case (?' ') {};
+        case (_) {
+          break l;
+        };
+      };
+      current := inputIter.next();
+    };
+
+    // Check all input was consumed.
+    assert(current == null);
+
+    // Skip leading zeroes in base256 result.
+    var b256Pointer : Nat = size - length;
+    while (b256Pointer < b256.size() and b256[b256Pointer] == 0) {
+      b256Pointer += 1;
+    };
+
+    let output = Array.tabulate<Nat8>(zeroes + b256.size() - b256Pointer,
+      func(i) {
+        if (i < zeroes) {
+          0x00;
+        } else {
+          b256[i + b256Pointer - zeroes];
+        };
+    });
+
+    return output;
+  };
 
   public func encode(input : [Nat8]) : Text {
     var zeroes : Nat = 0;

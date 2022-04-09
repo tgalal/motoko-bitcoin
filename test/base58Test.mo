@@ -111,11 +111,19 @@ do {
 
   Debug.print("Base58");
   for (i in Iter.range(0, testData.size() - 1)) {
-    Debug.print("   Test encode " # Nat.toText(i));
-    let input = testData[i].0;
-    let expected = testData[i].1;
-    let actual = Base58.encode(input);
-
-    assert(expected == actual);
+    do {
+      Debug.print("   Encode " # Nat.toText(i));
+      let input = testData[i].0;
+      let expected = testData[i].1;
+      let actual = Base58.encode(input);
+      assert(expected == actual);
+    };
+    do {
+      Debug.print("   Decode " # Nat.toText(i));
+      let input = testData[i].1;
+      let expected = testData[i].0;
+      let actual = Base58.decode(input);
+      assert(expected == actual);
+    };
   };
 };

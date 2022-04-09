@@ -20,4 +20,24 @@ module {
 
     return Base58.encode(Array.freeze(inputWithCheck));
   };
+
+  public func decode(input: Text) : ?[Nat8] {
+    let decoded : [Nat8] = Base58.decode(input);
+
+    // Strip the last 4 bytes.
+    let output = Array.tabulate<Nat8>(decoded.size() - 4, func(i) {
+      decoded[i];
+    });
+
+    // Re-calculate checksum, ensure it matches the included 4-byte checksum.
+    let hash : [Nat8] = SHA256.sha256(SHA256.sha256(output));
+
+    for (i in Iter.range(0, 3)) {
+      if (hash[i] != decoded[decoded.size() - 4 + i]) {
+        return null;
+      };
+    };
+
+    return ?output;
+  };
 };
