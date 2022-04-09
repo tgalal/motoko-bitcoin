@@ -71,3 +71,26 @@ digest.write([ /* Nat8 data */ ]);
 digest.write([ /* Nat8 data */ ]);
 let result : [Nat8] = digest.sum();
 ```
+
+EC
+
+```motoko
+import Jacobi "src/ec/Jacobi";
+import Affine "src/ec/Affine";
+import Curves "src/ec/Curves";
+
+// Get secp256k1 curve parameters.
+let secp256k1 : Curves.Curve = Curves.secp256k1;
+let Fp = secp256k1.Fp;
+
+// Create affine point on the secp256k1 curve
+let basePointAffine : Affine.Point = #point (Fp(secp256k1.gx), Fp(secp256k1.gy), secp256k1);
+// Convert to Jacobi point
+let basePointJacobi : Jacobi.Point = Jacobi.fromAffine(basePointAffine);
+
+// Scalar multiplication
+let mul1 = Jacobi.mul(basePointJacobi, 1234);
+let mul2 = Jacobi.mulBase(1234, Curves.secp256k1);
+
+assert(Jacobi.isEqual(mul1, mul2));
+```

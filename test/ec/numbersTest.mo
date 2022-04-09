@@ -13,6 +13,11 @@ type ToBinaryTestVector = {
   expected : [Bool];
 };
 
+type ToNafTestVector = {
+  input : Int;
+  expected : [Int];
+};
+
 let eeaTestVectors : [EeaTestVector] = [
   {
     input = (20, 5);
@@ -136,6 +141,33 @@ func testToBinary({input; expected}: ToBinaryTestVector) {
   assert(expected == actual);
 };
 
+let toNafTestVectors : [ToNafTestVector] = [
+  {
+    input = 59349;
+    expected = [1, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 1];
+  },
+  {
+    input = 29131;
+    expected = [-1, 0, -1, 0, 1, 0, -1, 0, 0, 1, 0, 0, -1, 0, 0, 1];
+  },
+  {
+    input = 22494;
+    expected = [0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, -1, 0, -1, 0, 1];
+  },
+  {
+    input = 32310;
+    expected = [0, -1, 0, -1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1];
+  },
+  {
+    input = 44797;
+    expected = [1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 0, -1, 0, 1];
+  },
+];
+func testToNaf({input; expected} : ToNafTestVector) {
+  let actual = Numbers.toNaf(input);
+  assert(expected == actual);
+};
+
 Debug.print("Numbers Test");
 
 let runTest = TestUtils.runTestWithDefaults;
@@ -150,4 +182,10 @@ runTest({
   title = "Convert Decimal to Binary";
   fn = testToBinary;
   vectors = toBinaryTestVectors;
+});
+
+runTest({
+  title = "Non-adjacent form representation";
+  fn = testToNaf;
+  vectors = toNafTestVectors;
 });
