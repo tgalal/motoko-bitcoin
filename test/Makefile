@@ -4,7 +4,7 @@ WASMTIME_OPTIONS = --disable-cache
 
 OUTDIR=_out
 
-TESTS = $(wildcard *.mo)
+TESTS = $(wildcard *Test.mo) $(wildcard **/*Test.mo)
 
 TEST_TARGETS = $(patsubst %.mo,_out/%.checked,$(TESTS))
 
@@ -18,6 +18,7 @@ $(OUTDIR):
 		@mkdir $@
 
 $(OUTDIR)/%.wasm: %.mo | $(OUTDIR)
+		@ mkdir -p $(@D)
 		$(MOC) $(VESSEL_PKGS) -wasi-system-api -o $@ $<
 
 $(OUTDIR)/%.checked: $(OUTDIR)/%.wasm
