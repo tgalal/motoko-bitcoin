@@ -94,3 +94,17 @@ let mul2 = Jacobi.mulBase(1234, Curves.secp256k1);
 
 assert(Jacobi.isEqual(mul1, mul2));
 ```
+
+Bip32
+
+```motoko
+import Bip32 "src/Bip32";
+
+let rootKey : ?Bip32.ExtendedPublicKey = Bip32.parse("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8", null);
+
+do ? {
+  let derived : ?Bip32.ExtendedPublicKey = rootKey!.derivePath(#text "m/1/2/3");
+  derived!;
+};
+
+```
