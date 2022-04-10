@@ -157,6 +157,39 @@ let parseInvalidDataVectors = [
   },
 ];
 
+let relativeDerivationVectors : [DerivationVector] = [
+  {
+    xPublicKey = "xpub6AvUGrnEpfvJBbfx7sQ89Q8hEMPM65UteqEX4yUbUiES2jHfjexmfJoxCGSw"
+               # "FMZiPBaKQT1RiKWrKfuDV4vpgVs4Xn8PpPTR2i79rwHd4Zr";
+    derivations = [
+      {
+        derivePath = #text "2";
+        serialized = ?("xpub6BqyndF6rhZqmgktFCBcapkwubGxPqoAZtQaYewJHXVKZcLdnqBVC8N6f6FS"
+          # "HWUghjuTLeubWyQWfJdk2G3tGgvgj3qngo4vLTnnSjAZckv");
+      },
+      {
+        derivePath = #array ([2]);
+        serialized = ?("xpub6BqyndF6rhZqmgktFCBcapkwubGxPqoAZtQaYewJHXVKZcLdnqBVC8N6f6FS"
+          # "HWUghjuTLeubWyQWfJdk2G3tGgvgj3qngo4vLTnnSjAZckv");
+      },
+      {
+        derivePath = #text "2/2";
+        serialized = ?("xpub6FHUhLbYYkgFQiFrDiXRfQFXBB2msCxKTsNyAExi6keFxQ8sHfwpogY3p3s1"
+          # "ePSpUqLNYks5T6a3JqpCGszt4kxbyq7tUoFP5c8KWyiDtPp");
+      },
+      {
+        derivePath = #text "2'";
+        serialized = null;
+      },
+      {
+        derivePath = #text "2/2/1000000000";
+        serialized = ?("xpub6GX3zWVgSgPc5tgjE6ogT9nfwSADD3tdsxpzd7jJoJMqSY12Be6VQEFwDCp6"
+          # "wAQoZsH2iq5nNocHEaVDxBcobPrkZCjYW3QUmoDYzMFBDu9");
+      },
+    ];
+  },
+];
+
 func testDerivations(vector : DerivationVector) {
   let xPublicKey = Bip32.parse(vector.xPublicKey, null);
 
@@ -187,6 +220,24 @@ func testParseInvalidData(vector : ParseInvalidDataVector) {
   };
 };
 
+func testRelativeDerivation(vector : DerivationVector) {
+  let xPublicKey = Bip32.parse(vector.xPublicKey, ?(#fingerprint([])));
+
+  assert((do ? {
+    assert(xPublicKey!.serialize() == vector.xPublicKey);
+    for ({ derivePath; serialized } in vector.derivations.vals()) {
+      switch(xPublicKey!.derivePath(derivePath)) {
+        case (null) {
+          assert(serialized == null);
+        };
+        case (?actualPublic) {
+          assert(serialized == ?actualPublic.serialize());
+        };
+      };
+    };
+  }) != null);
+};
+
 Debug.print("Bip32");
 
 let runTest = TestUtils.runTestWithDefaults;
@@ -201,4 +252,10 @@ runTest({
   title = "Handling of Invalid Serializations";
   fn = testParseInvalidData;
   vectors = parseInvalidDataVectors;
+});
+
+runTest({
+  title = "Relative derivation";
+  fn = testRelativeDerivation;
+  vectors = relativeDerivationVectors;
 });

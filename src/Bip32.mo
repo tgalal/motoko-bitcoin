@@ -16,10 +16,23 @@ module {
     #text : Text;
     #array : [Nat32];
   };
+
+  // #publicKeyData is SEC1 encoded public key data.
+  // #fingerprint is the fingerprint of the public key.
+  public type ParentPublicKey = {
+    #publicKeyData : [Nat8];
+    #fingerprint : [Nat8];
+  };
+
   let curve : Curves.Curve = Curves.secp256k1;
   let publicPrefix : Nat32 = 0x0488B21E;
 
-  public func parse(bip32Key : Text, parentPubKey: ?[Nat8])
+  // Parse a Bip32 serialized key. If _parentPubKey is #publicKeyData, will
+  // verify the fingerprint within the parsed key. If _parentPubKey is
+  // non-empty #fingerprint, will verify the fingerprint against those values.
+  // If _parentPubKey is empty #fingerprint, will inherit the parsed fingerprint
+  // without verification.
+  public func parse(bip32Key : Text, _parentPubKey : ?ParentPublicKey)
   : ?ExtendedPublicKey {
     switch(Base58Check.decode(bip32Key)) {
       case (?b58Decoded) {
@@ -33,6 +46,7 @@ module {
           b58Decoded[5 + i];
         });
         let index : Nat32 = Common.readBE32(b58Decoded, 9);
+        var parentPubKey = _parentPubKey;
 
         if (depth == 0) {
           // There should not be a fingerprint since depth is 0.
@@ -43,18 +57,33 @@ module {
           if (index > 0) {
             return null;
           };
+
+          if (parentPubKey != null) {
+            return null;
+          };
         } else {
           switch (parentPubKey) {
-            case (?parentPubKey) {
-              let parentPubKeyHash = Hash.hash160(parentPubKey);
+            case (?(#publicKeyData publicKeyData)) {
+              let parentPubKeyHash = Hash.hash160(publicKeyData);
               for (i in Iter.range(0, 3)) {
                 if (parentPubKeyHash[i] != fingerprint[i]) {
                   return null;
                 };
               };
             };
+            case (?(#fingerprint parentPublicKeyFingerprint)) {
+              if (parentPublicKeyFingerprint.size() > 0) {
+                for (i in Iter.range(0, 3)) {
+                  if (parentPublicKeyFingerprint[i] != fingerprint[i]) {
+                    return null;
+                  };
+                };
+              } else {
+                parentPubKey := ?(#fingerprint (fingerprint));
+              };
+            };
             case (null) {
-              return null;
+               return null;
             };
           };
         };
@@ -132,7 +161,7 @@ module {
     _chaincode : [Nat8],
     _depth: Nat8,
     _index: Nat32,
-    _parentPublicKey: ?[Nat8]
+    _parentPublicKey: ?ParentPublicKey
     ) {
 
     public let key = _key;
@@ -199,7 +228,7 @@ module {
         childChaincode,
         depth + 1,
         index,
-        ?key);
+        ?(#publicKeyData key));
     };
 
     public func serialize() : Text {
@@ -212,9 +241,14 @@ module {
           result[4]:= 0x00;
           Common.writeBE64(result, 5, 0x00);
         };
-        case (?parentPublicKey) {
+        case (?(#publicKeyData parentPublicKey)) {
           result[4] := depth;
           let fingerprint = Hash.hash160(parentPublicKey);
+          Common.copy(result, 5, fingerprint, 0, 4);
+          Common.writeBE32(result, 9, index);
+        };
+        case (?(#fingerprint fingerprint)) {
+          result[4] := depth;
           Common.copy(result, 5, fingerprint, 0, 4);
           Common.writeBE32(result, 9, index);
         };
