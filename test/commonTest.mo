@@ -3,7 +3,6 @@ import Debug "mo:base/Debug";
 import Array "mo:base/Array";
 import Common "../src/Common";
 
-
 let testData : [{
   offset : Nat;
   nat32 : Nat32;
@@ -57,8 +56,9 @@ let testData : [{
   }
 ];
 
+Debug.print("Common");
+
 do {
-  Debug.print("Common");
   for (i in Iter.range(0, testData.size() - 1)) {
     let currentData = testData[i];
     let offset = currentData.offset;
@@ -130,5 +130,34 @@ do {
       });
       Common.writeBE256(output, 0, currentData.nat256);
     };
+  };
+};
+
+do {
+  Debug.print("  Text to Nat");
+  let testData : [(Text, ?Nat)] = [
+    ("0", ?0),
+    ("1", ?1),
+    ("2", ?2),
+    ("12345", ?12345),
+    ("55555", ?55555),
+    ("299999999", ?299999999),
+    ("0xff", null),
+    ("  ", null),
+    ("  l", null),
+    ("1  l", null),
+    ("1  ", null),
+    ("abc", null),
+    ("1abc", null),
+    ("abc1", null),
+    ("/5", null),
+    ("5/", null),
+    (":5", null),
+    ("5:", null),
+  ];
+
+  for ((input, output) in testData.vals()) {
+    let actual = Common.textToNat(input);
+    assert(actual == output);
   };
 };

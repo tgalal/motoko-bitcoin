@@ -2,6 +2,7 @@ import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
 import Iter "mo:base/Iter";
+import Text "mo:base/Text";
 
 module {
   // Read big endian 32-bit natural number starting at offset.
@@ -109,6 +110,20 @@ module {
     srcOffset : Nat, count : Nat) {
       for (i in Iter.range(0, count - 1)) {
         dest[destOffset + i] := src[srcOffset + i];
-      };
     };
+  };
+
+  public func textToNat(input : Text) : ?Nat {
+    var result : Nat = 0;
+    for (asciiVal in Text.encodeUtf8(input).vals()) {
+      if (asciiVal < 0x30 or asciiVal > 0x39) {
+        return null;
+      };
+
+      result *= 10;
+      result += Nat8.toNat((asciiVal - 48));
+    };
+
+    return ?result;
+  };
 };
