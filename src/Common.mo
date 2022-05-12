@@ -113,6 +113,8 @@ module {
     };
   };
 
+  // Parses given text as unsigned integer, returns null if it contains
+  // non-number characters.
   public func textToNat(input : Text) : ?Nat {
     var result : Nat = 0;
     for (asciiVal in Text.encodeUtf8(input).vals()) {
