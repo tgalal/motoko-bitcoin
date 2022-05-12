@@ -119,6 +119,10 @@ module {
     return index >= 0x80000000; // 2**31
   };
 
+  // Parses a Text path in the form "m/a/b/c/..." for unsigned integers
+  // a,b,c,... and returns an array [a, b, c, ...]. Parsing fails and returns
+  // null if input is not in the expected format or if it contains hardened
+  // indices (e.g., m/0/1').
   func arrayPathFromString(path : Text) : ?[Nat32] {
     // Initial size most suitable for single-digit indices
     let parsedPathBuffer : Buffer.Buffer<Nat32> = Buffer.Buffer(path.size() / 2);
@@ -156,6 +160,7 @@ module {
     return ?parsedPathBuffer.toArray();
   };
 
+  // Representation of a BIP32 extended public key.
   public class ExtendedPublicKey(
     _key: [Nat8],
     _chaincode : [Nat8],
@@ -170,8 +175,11 @@ module {
     public let index  = _index;
     public let parentPublicKey = _parentPublicKey;
 
+    // Derive a child public key with path relative to this instance. Returns
+    // null if path is #text and cannot be parsed.
     public func derivePath(path : Path) : ?ExtendedPublicKey {
       return do ? {
+        // Normalize the given path as an array of indices.
         let pathArray : [Nat32] = switch(path) {
           case (#array path) {
             path
@@ -199,6 +207,10 @@ module {
 
       let hmacData : [var Nat8] = Array.init<Nat8>(37, 0x00);
 
+      // Compute HMAC with chaincode as the key and the serialized
+      // parentPublicKey (33 bytes) concatenated with the serialized
+      // index (4 bytes) as its data.
+      let hmacData : [var Nat8] = Array.init<Nat8>(33 + 4, 0x00);
       Common.copy(hmacData, 0, key, 0, 33);
       Common.writeBE32(hmacData, 33, index);
 
@@ -231,6 +243,8 @@ module {
         ?(#publicKeyData key));
     };
 
+    // Serialize the extended public key data into Base58 encoded string
+    // following format dictated by BIP32 specification.
     public func serialize() : Text {
       let result = Array.init<Nat8>(78, 0);
 
