@@ -49,19 +49,16 @@ module {
         var parentPubKey = _parentPubKey;
 
         if (depth == 0) {
-          // There should not be a fingerprint since depth is 0.
-          if (fingerprint != [0, 0, 0, 0]) {
-            return null;
-          };
-          // Can't have an index > 0 at depth == 0.
-          if (index > 0) {
-            return null;
-          };
-
-          if (parentPubKey != null) {
+          // With depth = 0 we are parsing the master public key which must be
+          // of index > 0 and does not have a parent.
+          if (parentPubKey != null or fingerprint != [0, 0, 0, 0] or
+            index > 0) {
             return null;
           };
         } else {
+          // Parsing a child public key.
+          // Verify that the specified parent public key or its fingerprint
+          // matches the parsed fingerprint.
           switch (parentPubKey) {
             case (?(#publicKeyData publicKeyData)) {
               let parentPubKeyHash = Hash.hash160(publicKeyData);
@@ -110,6 +107,7 @@ module {
           parentPubKey);
       };
       case (null) {
+        // Parsing as b58 string failed.
         return null;
       };
     };
@@ -188,24 +186,25 @@ module {
             arrayPathFromString(path)!;
           };
         };
-        var target : ExtendedPublicKey = ExtendedPublicKey(
-          key, chaincode, depth, index, parentPublicKey);
 
-        for (_index in pathArray.vals()) {
-          var index = _index;
-          if (isHardenedIndex(index)) {
-            return null;
-          };
-          target := target.deriveChild(index);
+        var target : ExtendedPublicKey = ExtendedPublicKey(key, chaincode,
+          depth, index, parentPublicKey);
+
+        // Derive the hierarchy of child keys.
+        for (childIndex in pathArray.vals()) {
+          target := target.deriveChild(childIndex)!;
         };
         target;
       };
     };
 
-    public func deriveChild(index: Nat32) : ExtendedPublicKey {
-      assert(not isHardenedIndex(index));
-
-      let hmacData : [var Nat8] = Array.init<Nat8>(37, 0x00);
+    // Derive child at the given index. Valid indices are in the range
+    // [0, 2^31 - 1] and the function throws an error if given an index outside
+    // this range.
+    public func deriveChild(index: Nat32) : ?ExtendedPublicKey {
+      if (isHardenedIndex(index)) {
+        return null;
+      };
 
       // Compute HMAC with chaincode as the key and the serialized
       // parentPublicKey (33 bytes) concatenated with the serialized
@@ -213,34 +212,45 @@ module {
       let hmacData : [var Nat8] = Array.init<Nat8>(33 + 4, 0x00);
       Common.copy(hmacData, 0, key, 0, 33);
       Common.writeBE32(hmacData, 33, index);
-
       let hmacSha512 : Hmac.Hmac = Hmac.sha512(chaincode);
       hmacSha512.write(Array.freeze(hmacData));
-
       let fullNode : [Nat8] = hmacSha512.sum();
-      let leftNode : [Nat8] = Array.tabulate<Nat8>(32, func (i) {
+
+      // Split HMAC output into two 32-byte sequences.
+      let left : [Nat8] = Array.tabulate<Nat8>(32, func (i) {
         fullNode[i];
       });
-      let leftNodeParsed: Nat = Common.readBE256(leftNode, 0);
-
-      let childKey : [Nat8] =
-        Jacobi.toBytes(
-          Jacobi.add(
-            Jacobi.mulBase(leftNodeParsed, curve),
-            Jacobi.fromBytes(key, curve)
-          ), true
-        );
-
-      let childChaincode: [Nat8] = Array.tabulate<Nat8>(32, func (i) {
+      let right: [Nat8] = Array.tabulate<Nat8>(32, func (i) {
         fullNode[i + 32];
       });
 
-      return ExtendedPublicKey(
-        childKey,
-        childChaincode,
-        depth + 1,
-        index,
-        ?(#publicKeyData key));
+      // Parse the left 32-bytes as an integer in the domain parameters of
+      // secp2secp256k1 curve.
+      let multiplicand : Nat = Common.readBE256(left, 0);
+      if (multiplicand >= curve.r) {
+        // This has probability lower than 1 in 2^127.
+        return null;
+      };
+
+      // Derive the child public key.
+      let childPublicKey : Jacobi.Point = Jacobi.add(
+        Jacobi.mulBase(multiplicand, curve),
+        Jacobi.fromBytes(key, curve)
+      );
+
+      switch (childPublicKey) {
+        case (#infinity) {
+          return null;
+        };
+        case _ {
+          return ?ExtendedPublicKey(
+            Jacobi.toBytes(childPublicKey, true),
+            right,
+            depth + 1,
+            index,
+            ?(#publicKeyData key));
+        };
+      };
     };
 
     // Serialize the extended public key data into Base58 encoded string
