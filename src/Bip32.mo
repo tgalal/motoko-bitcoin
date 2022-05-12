@@ -98,13 +98,17 @@ module {
           b58Decoded[45 + i];
         });
 
-        let parsedPoint = Affine.fromBytes(keyData, curve);
-        if (not Affine.isOnCurve(parsedPoint)) {
-          return null;
+        return switch (Affine.fromBytes(keyData, curve)) {
+          case (null) {
+            return null;
+          };
+          case (?parsedPoint) {
+            if (not Affine.isOnCurve(parsedPoint)) {
+              return null;
+            };
+            ?ExtendedPublicKey(keyData, chaincode, depth, index, parentPubKey);
+          };
         };
-
-        return ?ExtendedPublicKey(keyData, chaincode, depth, index,
-          parentPubKey);
       };
       case (null) {
         // Parsing as b58 string failed.
@@ -232,23 +236,25 @@ module {
         return null;
       };
 
-      // Derive the child public key.
-      let childPublicKey : Jacobi.Point = Jacobi.add(
-        Jacobi.mulBase(multiplicand, curve),
-        Jacobi.fromBytes(key, curve)
-      );
-
-      switch (childPublicKey) {
-        case (#infinity) {
+      switch (Jacobi.fromBytes(key, curve)) {
+        case (null) {
           return null;
         };
-        case _ {
-          return ?ExtendedPublicKey(
-            Jacobi.toBytes(childPublicKey, true),
-            right,
-            depth + 1,
-            index,
-            ?(#publicKeyData key));
+        case (?parsedKey) {
+          // Derive the child public key.
+          switch (Jacobi.add(Jacobi.mulBase(multiplicand, curve), parsedKey)) {
+            case (#infinity (_)) {
+              return null;
+            };
+            case (childPublicKey) {
+              return ?ExtendedPublicKey(
+                Jacobi.toBytes(childPublicKey, true),
+                right,
+                depth + 1,
+                index,
+                ?(#publicKeyData key));
+            };
+          };
         };
       };
     };
