@@ -33,6 +33,7 @@ module {
     255,255,255,255,255,255,255,255,
   ];
 
+  // Convert the given Base58 input to Base256.
   public func decode(input : Text) : [Nat8] {
     let inputIter : Iter.Iter<Char> = input.chars();
     var current : ?Char = inputIter.next();
@@ -67,8 +68,11 @@ module {
       current := inputIter.next();
     };
 
-    // log(58) / log(256), rounded up.
-    let size : Nat = (input.size() - zeroes - spaces) * 733/1000 + 1;
+    // Compute how many bytes are needed for the Base256 representation. We
+    // need log(58) / log(256) of one byte to represent a Base58 digit in
+    // Base256, which is approximately 733 / 1000. The input size is multiplied
+    // by this value and rounded up to get the total Base256 required size.
+    let size : Nat = (input.size() - zeroes - spaces) * 733 / 1000 + 1;
     let b256 : [var Nat8] = Array.init<Nat8>(size, 0x00);
 
     label l loop {
@@ -87,7 +91,6 @@ module {
           var i : Nat = 0;
           var b256Pointer : Nat = b256.size() - 1;
           label reverseIter while (carry != 0 or i < length) {
-
 
             carry += 58 * Nat8.toNat(b256[b256Pointer]);
             b256[b256Pointer] := Nat8.fromNat(carry % 256);
@@ -139,6 +142,7 @@ module {
     return output;
   };
 
+  // Convert the given Base256 input to Base58.
   public func encode(input : [Nat8]) : Text {
     var zeroes : Nat = 0;
     var length : Nat = 0;

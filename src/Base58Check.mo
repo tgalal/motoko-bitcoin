@@ -4,6 +4,8 @@ import SHA256 "../motoko-sha/src/SHA256";
 import Base58 "./Base58";
 
 module {
+
+  // Convert the given Base256 input to Base58 with checksum.
   public func encode(input : [Nat8]) : Text {
     // Add 4-byte hash check to the end.
     let hash : [Nat8] = SHA256.sha256(SHA256.sha256(input));
@@ -21,6 +23,8 @@ module {
     return Base58.encode(Array.freeze(inputWithCheck));
   };
 
+  // Convert the given checked Base58 input to Base256. Returns null if the
+  // checksum verification fails.
   public func decode(input: Text) : ?[Nat8] {
     let decoded : [Nat8] = Base58.decode(input);
 
