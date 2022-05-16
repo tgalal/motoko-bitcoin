@@ -176,12 +176,13 @@ module {
       case (#point (x2, y2, _, curve)) {
         var p : (Int, Int, Int) = (0, 0, 1);
         let naf = Numbers.toNaf(other);
+        let y2neg = y2.neg().value;
 
         for (i in Iter.revRange(naf.size() - 1, 0)) {
           let nafItem : Int = naf[Int.abs(i)];
           p := doDouble(p.0, p.1, p.2, curve.a, curve.p);
           if (nafItem < 0) {
-            p := _add(p.0, p.1, p.2, x2.value, y2.neg().value, 1,
+            p := _add(p.0, p.1, p.2, x2.value, y2neg, 1,
               curve.a, curve.p);
           } else if (nafItem > 0) {
             p := _add(p.0, p.1, p.2, x2.value, y2.value, 1, curve.a, curve.p);
@@ -238,10 +239,6 @@ module {
    };
 
    let (XX, YY) = (X1 * X1 % p, Y1 * Y1 % p);
-   if (YY == 0) {
-     return (0, 0, 0);
-   };
-
    let YYYY : Int = YY * YY % p;
    let ZZ : Int = Z1 * Z1 % p;
    let S : Int = 2 * ((X1 + YY) ** 2 - XX - YYYY) % p;
@@ -255,12 +252,11 @@ module {
   };
 
   func doubleWithZ1(X1: Int, Y1: Int, a : Nat, p : Nat): (Int, Int, Int) {
-      let (XX, YY) = (X1 * X1 % p, Y1 * Y1 % p);
-
-      if(YY == 0) {
+      if(Y1 == 0) {
         return (0, 0, 0);
       };
 
+      let (XX, YY) = (X1 * X1 % p, Y1 * Y1 % p);
       let YYYY : Int = YY * YY % p;
       let S : Int = 2 * ((X1 + YY) ** 2 - XX - YYYY) % p;
       let M : Int = 3 * XX + a;
@@ -342,14 +338,14 @@ module {
     let S1 : Int = Y1 * Z2 * Z2Z2 % p;
     let S2 : Int = Y2 * Z1 * Z1Z1 % p;
     let H : Int = U2 - U1;
-    let I : Int = 4 * H * H % p;
-    let J : Int = H * I % p;
     let r : Int = 2 * (S2 - S1) % p;
 
     if(H == 0 and r == 0) {
       return doDouble(X1, Y1, Z1, a, p);
     };
 
+    let I : Int = 4 * H * H % p;
+    let J : Int = H * I % p;
     let V = U1 * I;
     let X3 : Int = (r * r - J - 2 * V) % p;
     let Y3 : Int = (r * (V - X3) - 2 * S1 * J) % p;
