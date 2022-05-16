@@ -17,7 +17,9 @@ module {
 
   // Deserialize given data into a point on the given curve. This supports
   // compressed and uncompressed SEC-1 formats.
-  // Returns null if the deserialized point is not on the given curve.
+  // Returns null if data is not in correct format, data size is not exactly
+  // equal to the serialized point size, or if deserialized point is not on the
+  // given curve.
   public func fromBytes(data : [Nat8], curve: Curves.Curve) : ?Point {
     return switch (Affine.fromBytes(data, curve)) {
       case (null) {
