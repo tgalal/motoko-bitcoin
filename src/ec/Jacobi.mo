@@ -1,6 +1,7 @@
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
+import Debug "mo:base/Debug";
 import BaseFp "./Fp";
 import Affine "./Affine";
 import Curves "./Curves";
@@ -10,8 +11,8 @@ module {
   type Fp = BaseFp.Fp;
 
   public type Point = {
-    #infinity;
-    #point: (Fp, Fp, Fp, Curves.Curve);
+    #infinity : Curves.Curve;
+    #point : (Fp, Fp, Fp, Curves.Curve);
   };
 
   // Deserialize given data into a point on the given curve. This supports
@@ -22,8 +23,8 @@ module {
       case (null) {
         null
       };
-      case (?#infinity) {
-        ?#infinity
+      case (?(#infinity (curve))) {
+        ?(#infinity (curve))
       };
       case (?#point (x, y, curve)) {
         ?#point (x, y, curve.Fp(1), curve)
@@ -44,8 +45,8 @@ module {
   // Convert given point from affine coordinates to jacobi coordinates
   public func fromAffine(point: Affine.Point) : Point {
     return switch point {
-      case (#infinity) {
-        #infinity
+      case (#infinity (curve)) {
+        #infinity (curve)
       };
       case (#point (x, y, curve)) {
         #point (x, y, curve.Fp(1), curve)
@@ -66,27 +67,23 @@ module {
 
   // Check if the two given jacobi points are equal.
   public func isEqual(point1 : Point, point2 : Point) : Bool {
-    return switch point1 {
-      case (#infinity) {
-        isInfinity(point2)
+    return switch (normalizeInfinity(point1), normalizeInfinity(point2)) {
+      case (#infinity (curve1), #infinity (curve2)) {
+        Curves.isEqual(curve1, curve2);
       };
-      case (#point (x1, y1, z1, curve1)) {
-        switch point2 {
-          case (#infinity) {
-            false
-          };
-          case (#point (x2, y2, z2, curve2)) {
-            if (not Curves.isEqual(curve1, curve2)) {
-              return false;
-            };
+      case (#point (x1, y1, z1, curve1), #point (x2, y2, z2, curve2)) {
+        if (not Curves.isEqual(curve1, curve2)) {
+          false;
+        } else {
+          let zz1 = z1.sqr();
+          let zz2 = z2.sqr();
 
-            let zz1 = z1.sqr();
-            let zz2 = z2.sqr();
-
-            (x1.mul(zz2).isEqual(x2.mul(zz1))) and
-              (y1.mul(zz2).mul(z2).isEqual(y2.mul(zz1.mul(z1))));
-          };
+          (x1.mul(zz2).isEqual(x2.mul(zz1))) and
+            (y1.mul(zz2).mul(z2).isEqual(y2.mul(zz1.mul(z1))));
         };
+      };
+      case _ {
+        false;
       };
     };
   };
@@ -94,7 +91,7 @@ module {
   // Check if the given point is the point at infinity.
   public func isInfinity(point : Point) : Bool {
     return switch point {
-      case (#infinity) {
+      case (#infinity (_)) {
         true;
       };
       case (#point (_, _, z, curve)) {
@@ -107,8 +104,8 @@ module {
   public func toAffine(point: Point) : Affine.Point {
     let scaledPoint = scale(point);
     return switch scaledPoint {
-      case (#infinity) {
-        #infinity
+      case (#infinity (curve)) {
+        #infinity (curve)
       };
       case (#point (x, y, _, curve)) {
         #point (x, y, curve)
@@ -118,9 +115,9 @@ module {
 
   // Invert the given point on the x-axis.
   public func neg(point: Point) : Point {
-    return switch point {
-      case (#infinity) {
-        #infinity
+    return switch (normalizeInfinity(point)) {
+      case (#infinity (curve)) {
+        #infinity (curve)
       };
       case (#point (x, y, z, curve)) {
         #point (x, y.neg(), z, curve)
@@ -130,9 +127,9 @@ module {
 
   // Normalize the given point such that z = 1.
   public func scale(point: Point): Point {
-    switch point {
-      case (#infinity) {
-        return #infinity;
+    switch (normalizeInfinity(point)) {
+      case (#infinity (curve)) {
+        return #infinity (curve);
       };
       case (#point (x, y, z, curve)) {
         if (z.isEqual(curve.Fp(1))) {
@@ -153,9 +150,9 @@ module {
 
   // Return double of the given point.
   public func double(point : Point) : Point {
-    switch point {
-      case (#infinity) {
-        return #infinity;
+    switch (normalizeInfinity(point)) {
+      case (#infinity (curve)) {
+        return #infinity (curve);
       };
       case (#point (x, y, z, curve)) {
         let (x2, y2, z2) = doDouble(x.value, y.value, z.value, curve.a, curve.p);
@@ -168,11 +165,11 @@ module {
   // Multiply the given point by the given scalar value.
   public func mul(point: Point, other: Nat) : Point {
     if (other == 0) {
-      return #infinity;
+      return #infinity (getCurve(point));
     };
     switch (scale(point)) {
-      case (#infinity) {
-        return #infinity;
+      case (#infinity (curve)) {
+        return #infinity (curve);
       };
       case (#point (x2, y2, _, curve)) {
         var p : (Int, Int, Int) = (0, 0, 1);
@@ -189,7 +186,7 @@ module {
           };
         };
         if (p.1 == 0 or p.2 == 0) {
-          return #infinity;
+          return #infinity (curve);
         };
         return #point (fpFromInt(p.0, curve), fpFromInt(p.1, curve), fpFromInt(p.2, curve), curve);
       };
@@ -203,25 +200,28 @@ module {
 
   // Add the given two points.
   public func add(point1 : Point, point2: Point) : Point {
-    return switch point1 {
-      case (#infinity) {
+    if (not Curves.isEqual(getCurve(point1), getCurve(point2))) {
+      Debug.trap("Cannot add two points on different curves");
+    };
+
+    return switch (normalizeInfinity(point1), normalizeInfinity(point2)) {
+      case (#infinity (curve), #infinity (_)) {
+        #infinity (curve);
+      };
+      case (#infinity (_), _) {
         point2
       };
-      case (#point (X1, Y1, Z1, curve)) {
-        switch point2 {
-          case (#infinity) {
-            point1
-          };
-          case (#point (X2, Y2, Z2, _)) {
-            let (X3, Y3, Z3) = _add(X1.value, Y1.value, Z1.value,
-              X2.value, Y2.value, Z2.value, curve.a, curve.p);
-            if (Y3 == 0 or Z3 == 0) {
-              #infinity;
-            } else {
-              #point (fpFromInt(X3, curve), fpFromInt(Y3, curve),
-                fpFromInt(Z3, curve), curve);
-            };
-          };
+      case (_, #infinity (_)) {
+        point1
+      };
+      case (#point (X1, Y1, Z1, curve), #point (X2, Y2, Z2, _)) {
+        let (X3, Y3, Z3) = _add(X1.value, Y1.value, Z1.value,
+          X2.value, Y2.value, Z2.value, curve.a, curve.p);
+        if (Y3 == 0 or Z3 == 0) {
+          #infinity (curve);
+        } else {
+          #point (fpFromInt(X3, curve), fpFromInt(Y3, curve),
+            fpFromInt(Z3, curve), curve);
         };
       };
     };
@@ -232,12 +232,12 @@ module {
      return doubleWithZ1(X1, Y1, a, p)
    };
    if (Y1 == 0 or Z1 == 0) {
-     return (0, 0, 1);
+     return (0, 0, 0);
    };
 
    let (XX, YY) = (X1 * X1 % p, Y1 * Y1 % p);
    if (YY == 0) {
-     return (0, 0, 1);
+     return (0, 0, 0);
    };
 
    let YYYY : Int = YY * YY % p;
@@ -391,6 +391,27 @@ module {
       curve.Fp(Int.abs(mod + curve.p))
     } else {
       curve.Fp(Int.abs(mod))
+    };
+  };
+
+  // Normalizes infinity point of the form #point (_, _, 0, _) to #infinity.
+  func normalizeInfinity(point : Point) : Point {
+    return if (isInfinity(point)) {
+      #infinity (getCurve(point))
+    } else {
+      point;
+    };
+  };
+
+  // Extracts the curve from the given point.
+  func getCurve(point : Point) : Curves.Curve {
+    return switch (point) {
+      case (#infinity (curve)) {
+        curve
+      };
+      case (#point (_, _, _, curve)) {
+        curve;
+      };
     };
   };
 };

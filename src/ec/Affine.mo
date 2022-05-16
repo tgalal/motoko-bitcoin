@@ -6,14 +6,14 @@ import Array "mo:base/Array";
 module {
   type Fp = FpBase.Fp;
   public type Point = {
-    #infinity;
-    #point: (Fp, Fp, Curves.Curve);
+    #infinity : Curves.Curve;
+    #point : (Fp, Fp, Curves.Curve);
   };
 
   // Check if the given point is valid.
   public func isOnCurve(point: Point) : Bool {
     return switch point {
-      case (#infinity) {
+      case (#infinity (_)) {
         true;
       };
       case (#point (x, y, curve)) {
@@ -69,7 +69,7 @@ module {
   // Serialize given point to bytes in SEC-1 format.
   public func toBytes(point : Point, compressed : Bool) : [Nat8] {
     switch point {
-      case (#infinity) {
+      case (#infinity (_)) {
         return [];
       };
       case (#point (x, y, _)) {

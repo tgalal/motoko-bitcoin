@@ -26,7 +26,7 @@ func getSecp256k1Point(coords : ?(Nat, Nat)) : Jacobi.Point {
       };
     };
     case (null) {
-      return #infinity;
+      return #infinity (Curves.secp256k1);
     };
   };
 };
