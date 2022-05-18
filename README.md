@@ -108,3 +108,12 @@ do ? {
 };
 
 ```
+
+Bech32:
+
+```motoko
+import Bech32 "src/Bech32";
+
+Bech32.encode("bc", [ /* Nat8 data */ ], #BECH32);
+Bech32.decode("bc", "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4");
+```
