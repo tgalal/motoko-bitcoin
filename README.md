@@ -117,3 +117,12 @@ import Bech32 "src/Bech32";
 Bech32.encode("bc", [ /* Nat8 data */ ], #BECH32);
 Bech32.decode("bc", "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4");
 ```
+
+Segwit:
+
+```motoko
+import Segwit "src/Segwit";
+
+Segwit.encode("bc", /* WitnessProgram */ );
+Segwit.decode("bc", "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4");
+```
