@@ -14,7 +14,7 @@ module {
     #BECH32; #BECH32M;
   };
 
-  // A decoded result contains Encoding type, HRP, and Data.
+  // A decoded result contains Encoding type, human-readable part (HRP), and Data.
   public type DecodeResult = (Encoding, Text, [Nat8]);
 
   let CHAR_a : Nat8 = 0x61;
@@ -151,7 +151,7 @@ module {
   };
 
   // Expand HRP for checksum computations by grouping together the first 3 bits
-  // of all characters, then a zero then the last 5 bits of all characters.
+  // of all characters, then a zero, then the last 5 bits of all characters.
   // [a, b] => [a[:3], b[:3]] + [0] + [a[3:], b[3:]].
   func expandHrp(hrp : [Nat8]) : [Nat8] {
     let hrpSize = hrp.size();
