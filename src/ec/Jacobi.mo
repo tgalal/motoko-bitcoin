@@ -1,3 +1,11 @@
+// EC operations using Jacobian coordinates.
+//
+// This implementation is intended for use within Internet Computer canisters
+// which must only execute public operations. The code does not account for
+// side-channels as they're not relevant to the use case.
+//
+// Therefore, DO NOT use this code for any operations involving secrets.
+
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
