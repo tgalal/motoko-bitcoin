@@ -3,6 +3,7 @@ import Fp "../ec/Fp";
 import Curves "../ec/Curves";
 
 module {
+  public type PrivateKey = Nat;
   public type PublicKey = {
     coords : {
       x : Fp.Fp;
@@ -15,5 +16,11 @@ module {
   public type EncodedPublicKey = {
     #sec1 : Sec1PublicKey;
     #point : Affine.Point;
+  };
+
+  public type Signature = {r : Nat; s : Nat};
+  public type DerSignature = Blob;
+  public type EncodedSignature = {
+    #der : DerSignature;
   };
 };
