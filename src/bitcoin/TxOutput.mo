@@ -26,7 +26,10 @@ module {
 
   // Representation of a TxOutput of a Bitcoin transaction. A TxOutput locks
   // specified amount of Satoshi with the given script.
-  public class TxOutput(amount : Types.Satoshi, scriptPubKey : Script.Script) {
+  public class TxOutput(_amount : Types.Satoshi, _scriptPubKey : Script.Script) {
+
+    public let amount : Types.Satoshi = _amount;
+    public let scriptPubKey : Script.Script = _scriptPubKey;
 
     // Serialize to bytes with layout: | amount | serialized script |
     public func toBytes() : [Nat8] {
