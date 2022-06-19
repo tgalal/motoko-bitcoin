@@ -37,4 +37,8 @@ module {
   };
 
   public type P2PkhAddress = Text;
+
+  public type Address = {
+    #p2pkh : P2PkhAddress;
+  };
 };
