@@ -42,8 +42,10 @@ module {
 
   // Representation of a TxInput of a Bitcoin transaction. A TxInput is linked
   // to a previous transaction output given by prevOutput.
-  public class TxInput(prevOutput : Types.OutPoint, sequence : Nat32) {
+  public class TxInput(_prevOutput : Types.OutPoint, _sequence : Nat32) {
 
+    public let prevOutput : Types.OutPoint = _prevOutput;
+    public let sequence : Nat32 = _sequence;
     // Unlocking script. This is mutuable to enable signature hash construction
     // for a transaction without having to clone the transaction.
     public var script : Script.Script = [];
