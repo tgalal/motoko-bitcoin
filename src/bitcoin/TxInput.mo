@@ -12,7 +12,7 @@ module {
   // | prevTxId | prevTx output index | script | sequence |
   public func fromBytes(data : Iter.Iter<Nat8>) : Result.Result<TxInput, Text>{
     let (prevTxId, prevTxOutputIndex, script, sequence) = switch (
-      ByteUtils.read(data, 32, true),
+      ByteUtils.read(data, 32, false),
       ByteUtils.readLE32(data),
       Script.fromBytes(data, true),
       ByteUtils.readLE32(data)
@@ -60,12 +60,9 @@ module {
       var outputOffset = 0;
 
       let prevTxId = Blob.toArray(prevOutput.txid);
-      let reversedPrevTxid = Array.tabulate<Nat8>(32, func (n : Nat) {
-        prevTxId[prevTxId.size() - 1 - n];
-      });
 
       // Write prevTxId.
-      Common.copy(output, outputOffset, reversedPrevTxid, 0, 32);
+      Common.copy(output, outputOffset, prevTxId, 0, 32);
       outputOffset += 32;
 
       // Write prevTx output index.

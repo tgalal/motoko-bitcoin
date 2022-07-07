@@ -8,7 +8,6 @@ import ByteUtils "../ByteUtils";
 import Hash "../Hash";
 import Script "./Script";
 import Array "mo:base/Array";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Iter "mo:base/Iter";
 
@@ -43,14 +42,11 @@ module {
   // Map given network to its id.
   func encodeVersion(network : Types.Network) : Nat8 {
     return switch (network) {
-      case (#Bitcoin) {
+      case (#Mainnet) {
         0x00;
       };
       case (#Regtest or #Testnet) {
         0x6f;
-      };
-      case _ {
-        Debug.trap("Unsupported network.");
       };
     };
   };
@@ -87,7 +83,7 @@ module {
 
     return switch (decoded.next(), ByteUtils.read(decoded, 20, false)) {
       case (?(0x00), ?publicKeyHash) {
-        #ok {network = #Bitcoin; publicKeyHash = publicKeyHash}
+        #ok {network = #Mainnet; publicKeyHash = publicKeyHash}
       };
       case (?(0x6f), ?publicKeyHash) {
         #ok {network = #Testnet; publicKeyHash = publicKeyHash}

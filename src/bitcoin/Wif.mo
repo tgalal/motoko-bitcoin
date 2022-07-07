@@ -4,7 +4,6 @@ import Base58Check "../Base58Check";
 import ByteUtils "../ByteUtils";
 import Common "../Common";
 import Types "./Types";
-import Debug "mo:base/Debug";
 
 module {
   public type WifPrivateKey = Text;
@@ -12,14 +11,11 @@ module {
   // Map network to WIF version prefix.
   func encodeVersion(network : Types.Network) : Nat8 {
     return switch (network) {
-      case (#Bitcoin) {
+      case (#Mainnet) {
         0x80;
       };
       case (#Regtest or #Testnet) {
         0xef;
-      };
-      case _ {
-        Debug.trap("Unsupported network.");
       };
     };
   };
@@ -28,7 +24,7 @@ module {
   func decodeVersion(version : Nat8) : ?Types.Network {
     return switch (version) {
       case (0x80) {
-        ?(#Bitcoin)
+        ?(#Mainnet)
       };
       case (0xef) {
         ?(#Testnet)

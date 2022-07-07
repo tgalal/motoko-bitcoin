@@ -28,7 +28,7 @@ let addressTestData : [AddressTestCase] = [
       0x8a, 0x04, 0x5f, 0xa6, 0x42, 0xb9, 0x9e, 0xa5, 0xd1
     ];
     p2pkh = "1MmqjDhakEfJd9r5BoDhPApCpA75Em17GA";
-    network = #Bitcoin;
+    network = #Mainnet;
   },
 ];
 

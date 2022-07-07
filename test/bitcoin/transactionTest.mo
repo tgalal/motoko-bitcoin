@@ -39,7 +39,7 @@ func makeTransaction(testCase : TransactionTestCase) : Transaction.Transaction {
     func (output : TxOutput) {
       switch (PublicKey.decode(#sec1 (output.publicKey, Curves.secp256k1))) {
         case (#ok pk) {
-          switch (P2pkh.makeScript(P2pkh.deriveAddress(#Bitcoin, pk, true))) {
+          switch (P2pkh.makeScript(P2pkh.deriveAddress(#Mainnet, pk, true))) {
             case (#ok script) {
               TxOutput.TxOutput(output.amount, script)
             };

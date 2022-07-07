@@ -15,6 +15,7 @@ import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Nat8 "mo:base/Nat8";
+import Nat32 "mo:base/Nat32";
 import Blob "mo:base/Blob";
 
 module {
@@ -109,7 +110,7 @@ module {
 
   // Serialize signature to DER format:
   // 0x30 [total-length] 0x02 [R-length] [R] 0x02 [S-length] [S] [sighash-type]
-  func signatureToDer(signature : Signature,
+  public func signatureToDer(signature : Signature,
     sighashType : Types.SighashType) : [Nat8] {
 
     func prepSignatureMember(value : Nat) : [Nat8] {
@@ -189,7 +190,7 @@ module {
     };
 
     // sighashtype
-    output.add(0x01);
+    output.add(Nat8.fromNat(Nat32.toNat(sighashType)));
 
     return output.toArray();
   };
