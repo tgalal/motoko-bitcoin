@@ -4,10 +4,9 @@ module {
 
   // The type of Bitcoin network.
   public type Network = {
-    #Bitcoin;
+    #Mainnet;
     #Regtest;
     #Testnet;
-    #Signet;
   };
 
   // A reference to a transaction output.
@@ -21,7 +20,6 @@ module {
     outpoint : OutPoint;
     value : Satoshi;
     height : Nat32;
-    confirmations : Nat32;
   };
 
   public type SighashType = Nat32;

@@ -434,7 +434,6 @@ func testSignTransaction(testCase : SignTransactionTestCase) {
           };
           value = utxo.value;
           height = 0;
-          confirmations = 0;
         }
       };
       case _ {
