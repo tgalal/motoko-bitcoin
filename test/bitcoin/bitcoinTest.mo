@@ -50,7 +50,8 @@ type SignTransactionTestCase = {
 // Signing test cases. the field `expectedTxData` is the serialized transaction
 // after signature(s). This was obtained by running `bitcoin-tx -create` from
 // bitcoin core with the privateKey, expectedInputs, and expectedOutputs test
-// data as parameters.
+// data as parameters. Txids are specified in RPC byte-order (big endian) and
+// must be converted to internal byte-order (little endian) before usage.
 let signTestCases : [SignTransactionTestCase] = [
   {
     // Basic test on mainnet.
@@ -66,7 +67,7 @@ let signTestCases : [SignTransactionTestCase] = [
         value = 100000
       }
     ];
-    destinations = [  
+    destinations = [
       (#p2pkh "193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7", 100000)
     ];
     changeAddress = #p2pkh "193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7";
@@ -429,7 +430,11 @@ func testSignTransaction(testCase : SignTransactionTestCase) {
       case (#ok txid) {
         {
           outpoint = {
-            txid = Blob.fromArray(txid);
+            // Convert from RPC byte order to Internal byte order.
+            txid = Blob.fromArray(Array.tabulate<Nat8>(txid.size(),
+            func (n : Nat) {
+              txid[txid.size() - 1 - n]
+            }));
             vout = utxo.vout;
           };
           value = utxo.value;
@@ -447,7 +452,11 @@ func testSignTransaction(testCase : SignTransactionTestCase) {
       switch (Hex.decode(expectedInput.txid)) {
         case (#ok txid) {
           {
-            txid = Blob.fromArray(txid);
+            // Convert from RPC byte order to Internal byte order.
+            txid = Blob.fromArray(Array.tabulate<Nat8>(txid.size(),
+            func (n : Nat) {
+              txid[txid.size() - 1 - n]
+            }));
             vout = expectedInput.vout;
           }
         };
