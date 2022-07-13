@@ -104,7 +104,7 @@ module {
 
     // Create a signature hash for the given TxIn index.
     // Only SIGHASH_ALL is currently supported.
-    // Output layout: | Tx data | SighashType |
+    // Output: Signature Hash.
     public func createSignatureHash(scriptPubKey : Script.Script,
       txInputIndex : Nat32, sigHashType : Types.SighashType) : [Nat8] {
       let sighashMask : Nat32 = sigHashType & 0x1f;
@@ -130,7 +130,7 @@ module {
       Common.copy(output, 0, txData, 0, txData.size());
       Common.writeLE32(output, txData.size(), sigHashType);
 
-      return Array.freeze(output);
+      return Hash.doubleSHA256(Array.freeze(output));
     };
 
     // Serialize transaction to bytes with layout:
