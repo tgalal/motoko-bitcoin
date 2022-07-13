@@ -44,7 +44,7 @@ module {
     };
 
     // Sign given data and return Der encoded signature.
-    public func sign(data : Blob) : Blob {
+    public func sign(data : Blob, derivationPath : [Blob]) : Blob {
       let signature = ecdsaSign(
         bitcoinPrivateKey.key,
         signingNonces[nextNonce],

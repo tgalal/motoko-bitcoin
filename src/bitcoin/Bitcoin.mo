@@ -23,7 +23,8 @@ module {
 
   // Temporary abstraction for ECDSA signing for use in testing.
   type EcdsaProxy = {
-    sign : (Blob) -> Blob;
+    // Takes a message hash and a derivation path.
+    sign : (Blob, [Blob]) -> Blob;
     publicKey : () -> EcdsaTypes.PublicKey;
   };
 
@@ -119,7 +120,7 @@ module {
             // Create Script Sig which looks like:
             // ScriptSig = <Signature> <Public Key>.
             [
-              #data (Blob.toArray(ecdsaProxy.sign(Blob.fromArray(sighash)))),
+              #data (Blob.toArray(ecdsaProxy.sign(Blob.fromArray(sighash), []))),
               #data (PublicKey.toSec1(ecdsaProxy.publicKey(), false).0)
             ]
           }
