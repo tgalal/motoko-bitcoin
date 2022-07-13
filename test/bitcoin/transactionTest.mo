@@ -30,8 +30,12 @@ type TransactionTestCase = {
 func makeTransaction(testCase : TransactionTestCase) : Transaction.Transaction {
   let txIns = Array.map<TxInput, TxInput.TxInput>(testCase.txIns,
     func (input : TxInput) {
+      // Convert RPC byte-order to Internal byte-order.
+      let txid = Array.tabulate<Nat8>(input.txid.size(), func (n : Nat) {
+        input.txid[input.txid.size() - 1 - n]
+      });
       let tx = TxInput.TxInput(
-        {txid = Blob.fromArray(input.txid); vout = input.vout}, input.seq);
+        {txid = Blob.fromArray(txid); vout = input.vout}, input.seq);
       tx.script := [#data(input.sigder), #data(input.publicKey)];
       tx
     });
