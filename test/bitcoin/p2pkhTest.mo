@@ -54,15 +54,9 @@ let makeScriptTestCases : [MakeScriptTestCase] = [
 ];
 
 func testP2pkhDeriveAddress(testCase : AddressTestCase) {
-  switch (PublicKey.decode(#sec1 (testCase.key, Curves.secp256k1))) {
-    case (#ok (pk)) {
-      let actual = P2pkh.deriveAddress(testCase.network, pk, true);
-      assert(testCase.p2pkh == actual);
-    };
-    case _ {
-      Debug.trap("Decoding test data failed.");
-    };
-  };
+  let actual = P2pkh.deriveAddress(testCase.network,
+    (testCase.key, Curves.secp256k1));
+  assert(testCase.p2pkh == actual);
 };
 
 func testP2pkhDecodeAddress(testCase : AddressTestCase) {
