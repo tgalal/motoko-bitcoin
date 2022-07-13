@@ -1,4 +1,5 @@
 import Types "./Types";
+import EcdsaTypes "../ecdsa/Types";
 import Ecdsa "../ecdsa/Ecdsa";
 import Base58Check "../Base58Check";
 import SHA256 "../../motoko-sha/src/SHA256";
@@ -53,9 +54,9 @@ module {
 
   // Derive P2PKH address from given public key.
   public func deriveAddress(network : Types.Network,
-    publicKey : PublicKey, compressed : Bool) : Address {
+    sec1PublicKey : EcdsaTypes.Sec1PublicKey) : Address {
 
-    let (pkData, _) = PublicKey.toSec1(publicKey, compressed);
+    let (pkData, _) = sec1PublicKey;
     let ripemd160Hash : [Nat8] = Hash.hash160(pkData);
     let versionedHash : [Nat8] = Array.tabulate<Nat8>(
       ripemd160Hash.size() + 1, func(i) {
