@@ -6,7 +6,6 @@ import TestUtils "../TestUtils";
 import Hex "../Hex";
 import Script "../../src/bitcoin/Script";
 import Transaction "../../src/bitcoin/Transaction";
-import Hash "../../src/Hash";
 import Types "../../src/bitcoin/Types";
 
 type TestCase = TestCases.SighashTestCase;
@@ -66,7 +65,7 @@ func test(tcase : TestCase) {
   assert(tx.toBytes() == txData);
 
   let actualSighash = tx.createSignatureHash(script, tcase.inputIndex, hashType);
-  assert(expectedResult == Hash.doubleSHA256(actualSighash));
+  assert(expectedResult == actualSighash);
 };
 
 runTest({

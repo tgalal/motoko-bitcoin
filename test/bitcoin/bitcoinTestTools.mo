@@ -1,7 +1,6 @@
 import Affine "../../src/ec/Affine";
 import Jacobi "../../src/ec/Jacobi";
 import Curves "../../src/ec/Curves";
-import Hash "../../src/Hash";
 import Fp "../../src/ec/Fp";
 import Types "../../src/bitcoin/Types";
 import Common "../../src/Common";
@@ -80,8 +79,8 @@ module {
   // `sk` is the secret key.
   // `rand` is the signing nonce.
   // `message` is the data to sign.
-  func ecdsaSign(sk : Nat, rand : Nat, message : [Nat8]) : Signature {
-    let h = Common.readBE256(Hash.doubleSHA256(message), 0);
+  func ecdsaSign(sk : Nat, rand : Nat, hash : [Nat8]) : Signature {
+    let h = Common.readBE256(hash, 0);
     switch(Jacobi.toAffine(Jacobi.mulBase(rand, Curves.secp256k1))) {
       case (#point (x, y, curve)) {
         let r = x.value;

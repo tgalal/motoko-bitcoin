@@ -115,7 +115,7 @@ module {
         // Obtain scriptSigs for each Tx input.
         let scriptSigs = Array.tabulate<Script.Script>(
           transaction.txInputs.size(), func (i) {
-            let sighash = transaction.createSignatureHash(
+            let sighash : [Nat8] = transaction.createSignatureHash(
               scriptPubKey, Nat32.fromIntWrap(i), Types.SIGHASH_ALL);
             // Create Script Sig which looks like:
             // ScriptSig = <Signature> <Public Key>.
