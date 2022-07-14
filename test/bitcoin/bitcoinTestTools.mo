@@ -59,13 +59,16 @@ module {
     };
 
     // Returns the public key associated to `bitcoinPrivateKey`.
-    public func publicKey() : Blob {
+    public func publicKey() : (Blob, Blob) {
       let publicPoint = Jacobi.toAffine(Jacobi.mulBase(bitcoinPrivateKey.key,
         Curves.secp256k1));
 
       return switch (PublicKey.decode(#point publicPoint)) {
         case (#ok publicKey) {
-          Blob.fromArray(PublicKey.toSec1(publicKey, false).0)
+          (
+            Blob.fromArray(PublicKey.toSec1(publicKey, false).0),
+            Blob.fromArray([])
+          )
         };
         case (#err msg) {
           Debug.trap(msg)
@@ -77,7 +80,7 @@ module {
     public func p2pkhAddress() : Types.P2PkhAddress {
       P2pkh.deriveAddress(
         bitcoinPrivateKey.network,
-        (Blob.toArray(publicKey()), Curves.secp256k1));
+        (Blob.toArray(publicKey().0), Curves.secp256k1));
     };
   };
 
