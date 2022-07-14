@@ -108,7 +108,8 @@ module {
   // spent from.
   // `ecdsaProxy` is an interface providing ecdsa signing functionality.
   public func signTransaction(sourceAddress : Types.Address,
-    transaction : Transaction.Transaction, ecdsaProxy : EcdsaProxy
+    transaction : Transaction.Transaction, ecdsaProxy : EcdsaProxy,
+    derivationPath : [Blob]
   ) : Result.Result<Transaction.Transaction, Text> {
 
     // Obtain the scriptPubKey of the source address which is also the
@@ -120,7 +121,8 @@ module {
           transaction.txInputs.size(), func (i) {
             let sighash : [Nat8] = transaction.createSignatureHash(
               scriptPubKey, Nat32.fromIntWrap(i), Types.SIGHASH_ALL);
-              let signature : Blob = ecdsaProxy.sign(Blob.fromArray(sighash), []);
+              let signature : Blob = ecdsaProxy.sign(
+                Blob.fromArray(sighash), derivationPath);
               let encodedSignature : [Nat8] = Blob.toArray(
                 Der.encodeSignature(signature));
               // Append the sighash type.
@@ -167,14 +169,14 @@ module {
   // `fees` indicate the transaction fees.
   public func createSignedTransaction(
     sourceAddress : Types.Address, ecdsaProxy : EcdsaProxy,
-    version : Nat32, utxos : [Utxo], destinations : [(Types.Address, Satoshi)],
-    changeAddress : Types.Address, fees : Satoshi
-    ) : Result.Result<Transaction.Transaction, Text> {
+    derivationPath : [Blob], version : Nat32, utxos : [Utxo],
+    destinations : [(Types.Address, Satoshi)], changeAddress : Types.Address,
+    fees : Satoshi) : Result.Result<Transaction.Transaction, Text> {
 
     return switch (buildTransaction(version, utxos, destinations,
       changeAddress, fees)) {
       case (#ok transaction) {
-        signTransaction(sourceAddress, transaction, ecdsaProxy)
+        signTransaction(sourceAddress, transaction, ecdsaProxy, derivationPath)
       };
       case (#err msg) {
         #err msg
