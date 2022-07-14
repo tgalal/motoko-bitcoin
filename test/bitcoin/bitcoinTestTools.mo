@@ -17,6 +17,7 @@ import Buffer "mo:base/Buffer";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
 import Blob "mo:base/Blob";
+import Int "mo:base/Int";
 
 module {
   public type Signature = {r : Nat; s : Nat};
@@ -103,12 +104,12 @@ module {
           Debug.trap("s = 0, use different rand.");
         };
 
-        let finalS = if (s.value > curve.r/2) {
+        let finalS : Int = if (s.value > curve.r/2) {
           curve.r - s.value
         } else {
           s.value
         };
-        return {r = r; s = finalS};
+        return {r = r; s = Int.abs(finalS)};
       };
       case (#infinity (_)) {
         Debug.trap("Computed infinity point, use different rand.");
