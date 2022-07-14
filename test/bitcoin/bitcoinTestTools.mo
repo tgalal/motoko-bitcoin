@@ -9,6 +9,7 @@ import P2pkh "../../src/bitcoin/P2pkh";
 import Script "../../src/bitcoin/Script";
 import EcdsaTypes "../../src/ecdsa/Types";
 import PublicKey "../../src/ecdsa/Publickey";
+import Der "../../src/ecdsa/Der";
 import Debug "mo:base/Debug";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
@@ -50,7 +51,11 @@ module {
         Blob.toArray(data)
       );
       nextNonce += 1;
-      return Blob.fromArray(signatureToDer(signature, Types.SIGHASH_ALL));
+
+      let encodedOutput : [var Nat8] = Array.init<Nat8>(64, 0);
+      Common.writeBE256(encodedOutput, 0, signature.r);
+      Common.writeBE256(encodedOutput, 32, signature.s);
+      return Blob.fromArray(Array.freeze(encodedOutput));
     };
 
     // Returns the public key associated to `bitcoinPrivateKey`.
@@ -106,92 +111,5 @@ module {
         Debug.trap("Computed infinity point, use different rand.");
       };
     };
-  };
-
-  // Serialize signature to DER format:
-  // 0x30 [total-length] 0x02 [R-length] [R] 0x02 [S-length] [S] [sighash-type]
-  public func signatureToDer(signature : Signature,
-    sighashType : Types.SighashType) : [Nat8] {
-
-    func prepSignatureMember(value : Nat) : [Nat8] {
-      let data = Array.init<Nat8>(32, 0);
-      Common.writeBE256(data, 0, value);
-      var startOffset = 0;
-      label L for (i in Iter.range(0, data.size() - 1)) {
-        if (data[i] == 0) {
-          startOffset += 1;
-        } else {
-          break L;
-        };
-      };
-      // Prepend zero if most significant bit is set since integers in DER are
-      // signed.
-      let prependZero : Bool = data[startOffset] >= 0x80;
-      let totalSize = if (prependZero) {
-        data.size() - startOffset + 1
-      } else {
-        data.size() - startOffset
-      };
-
-      // Return data with zeroes ommitted, except for an initial zero if the
-      // MSB in the first byte is set.
-      return Array.tabulate<Nat8>(totalSize, func (i) {
-        if (prependZero) {
-          if (i == 0) {
-            0x00;
-          } else {
-            data[startOffset + i - 1]
-          };
-        } else {
-          data[startOffset + i]
-        };
-      });
-    };
-
-    let output = Buffer.Buffer<Nat8>(0);
-    let rData : [Nat8] = prepSignatureMember(signature.r);
-    let sData : [Nat8] = prepSignatureMember(signature.s);
-
-    // Add DER identifier.
-    output.add(0x30);
-    // Total size of everything that comes next, excluding sighash type.
-    output.add(Nat8.fromIntWrap(
-      // DER Sequence identifier: 0x02.
-      1
-      // Signature r component size.
-      + 1
-      // Signature r component.
-      + rData.size()
-      // DER Sequence identifier : 0x02.
-      + 1
-      // Signature s component size.
-      + 1
-      // Signature s component.
-      + sData.size()
-    ));
-    // DER sequence identifier.
-    output.add(0x02);
-    // Signature r component size.
-    output.add(Nat8.fromIntWrap(rData.size()));
-
-    // Signature r component.
-    for (i in rData.vals()) {
-      output.add(i);
-    };
-
-    // DER sequence identifier.
-    output.add(0x02);
-    // Signature s component size.
-    output.add(Nat8.fromIntWrap(sData.size()));
-
-    // Signature s component.
-    for (i in sData.vals()) {
-      output.add(i);
-    };
-
-    // sighashtype
-    output.add(Nat8.fromNat(Nat32.toNat(sighashType)));
-
-    return output.toArray();
   };
 };

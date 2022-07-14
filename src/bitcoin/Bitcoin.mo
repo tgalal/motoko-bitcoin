@@ -4,7 +4,9 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Nat32 "mo:base/Nat32";
+import Nat8 "mo:base/Nat8";
 import Transaction "./Transaction";
+import Der "../ecdsa/Der";
 import Script "./Script";
 import EcdsaTypes "../ecdsa/Types";
 import PublicKey "../ecdsa/Publickey";
@@ -21,9 +23,9 @@ module {
   let dustThreshold : Satoshi = 10_000;
   let defaultSequence : Nat32 = 0xffffffff;
 
-  // Temporary abstraction for ECDSA signing for use in testing.
   type EcdsaProxy = {
-    // Takes a message hash and a derivation path, outputs a signature.
+    // Takes a message hash and a derivation path, outputs a signature encoded
+    // as the concatenation of big endian representation of r and s values.
     sign : (Blob, [Blob]) -> Blob;
     // Outputs SEC-1 encoded public key.
     publicKey : () -> Blob;
@@ -104,7 +106,7 @@ module {
   // Sign given transaction.
   // `sourceAddress` is the spender's address appearing in the TxOutputs being
   // spent from.
-  // `ecdsaProxy` is a temporary interface for ecdsa signing used for testing.
+  // `ecdsaProxy` is an interface providing ecdsa signing functionality.
   public func signTransaction(sourceAddress : Types.Address,
     transaction : Transaction.Transaction, ecdsaProxy : EcdsaProxy
   ) : Result.Result<Transaction.Transaction, Text> {
@@ -118,10 +120,23 @@ module {
           transaction.txInputs.size(), func (i) {
             let sighash : [Nat8] = transaction.createSignatureHash(
               scriptPubKey, Nat32.fromIntWrap(i), Types.SIGHASH_ALL);
+              let signature : Blob = ecdsaProxy.sign(Blob.fromArray(sighash), []);
+              let encodedSignature : [Nat8] = Blob.toArray(
+                Der.encodeSignature(signature));
+              // Append the sighash type.
+              let encodedSignatureWithSighashType = Array.tabulate<Nat8>(
+                encodedSignature.size() + 1, func (n) {
+                  if (n < encodedSignature.size()) {
+                    encodedSignature[n]
+                  } else {
+                    Nat8.fromNat(Nat32.toNat(Types.SIGHASH_ALL))
+                  };
+              });
+
             // Create Script Sig which looks like:
             // ScriptSig = <Signature> <Public Key>.
             [
-              #data (Blob.toArray(ecdsaProxy.sign(Blob.fromArray(sighash), []))),
+              #data encodedSignatureWithSighashType,
               #data (Blob.toArray(ecdsaProxy.publicKey()))
             ]
           }
@@ -142,7 +157,7 @@ module {
   // Create and sign a transaction.
   // `sourceAddress` is the spender's address appearing in the TxOutputs being
   // spent from.
-  // `ecdsaProxy` is a temporary interface for ecdsa signing used for testing.
+  // `ecdsaProxy` is an interface for ECDSA signing functionality.
   // `version` is the transaction version. Currently only 1 and 2 are
   // supported.
   // `utxos` is a set of unspent transaction outputs to construct TxInputs from.
