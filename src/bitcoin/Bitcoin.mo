@@ -27,8 +27,8 @@ module {
     // Takes a message hash and a derivation path, outputs a signature encoded
     // as the concatenation of big endian representation of r and s values.
     sign : (Blob, [Blob]) -> Blob;
-    // Outputs SEC-1 encoded public key.
-    publicKey : () -> Blob;
+    // Outputs SEC-1 encoded public key and a chain code.
+    publicKey : () -> (Blob, Blob);
   };
 
   // Builds a transaction.
@@ -139,7 +139,7 @@ module {
             // ScriptSig = <Signature> <Public Key>.
             [
               #data encodedSignatureWithSighashType,
-              #data (Blob.toArray(ecdsaProxy.publicKey()))
+              #data (Blob.toArray(ecdsaProxy.publicKey().0))
             ]
           }
         );
