@@ -486,7 +486,7 @@ func testSignTransaction(testCase : SignTransactionTestCase) {
     testCase.privateKey, testCase.signingNonces);
   switch (
     Bitcoin.createSignedTransaction(
-      #p2pkh (ecdsaProxy.p2pkhAddress()), ecdsaProxy,
+      #p2pkh (ecdsaProxy.p2pkhAddress()), ecdsaProxy, [],
       1, mappedUtxos, destinations, changeAddress, fees),
     result,
     Hex.decode(testCase.expectedTxData)
