@@ -44,10 +44,6 @@ let derivationVectors: [DerivationVector] = [
           # "ePSpUqLNYks5T6a3JqpCGszt4kxbyq7tUoFP5c8KWyiDtPp");
       },
       {
-        derivePath = #text "m/0/1'/2/2";
-        serialized = null;
-      },
-      {
         derivePath = #text "m/0/1/2/2/1000000000";
         serialized = ?("xpub6GX3zWVgSgPc5tgjE6ogT9nfwSADD3tdsxpzd7jJoJMqSY12Be6VQEFwDCp6"
           # "wAQoZsH2iq5nNocHEaVDxBcobPrkZCjYW3QUmoDYzMFBDu9");
@@ -67,10 +63,6 @@ let derivationVectors: [DerivationVector] = [
         derivePath = #array ([0, 2147483647]);
         serialized = ?("xpub6ASAVgeWMg4pmutghzHG3BohahjwNwPmy2DgM6W9wGegtPrvNgjBwuZRD7hS"
           # "DFhYfunq8vDgwG4ah1gVzZysgp3UsKz7VNjCnSUJJ5T4fdD");
-      },
-      {
-        derivePath = #array ([0, 2147483649]);
-        serialized = null;
       },
       {
         derivePath = #array ([0, 2147483647, 1]);
