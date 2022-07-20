@@ -44,13 +44,24 @@ let derivationVectors: [DerivationVector] = [
           # "ePSpUqLNYks5T6a3JqpCGszt4kxbyq7tUoFP5c8KWyiDtPp");
       },
       {
-        derivePath = #text "m/0/1'/2/2";
-        serialized = null;
-      },
-      {
         derivePath = #text "m/0/1/2/2/1000000000";
         serialized = ?("xpub6GX3zWVgSgPc5tgjE6ogT9nfwSADD3tdsxpzd7jJoJMqSY12Be6VQEFwDCp6"
           # "wAQoZsH2iq5nNocHEaVDxBcobPrkZCjYW3QUmoDYzMFBDu9");
+      },
+      {
+        derivePath = #extended ([[1, 2, 3, 4, 5]]);
+        serialized = ?("xpub661MyMwAqRbcGsSdYunw6oK1384d9MkdQWK3472cWknZ2v6QyuXM8B5YRXSH"
+          # "BdSCbQoG25HfdhzpsBDsE4Mz9fgxiH27e1VEPMFtAcktt97");
+      },
+      {
+        derivePath = #extended ([[8, 0, 2, 8, 0, 2]]);
+        serialized = ?("xpub661MyMwAqRbcFzWy5kpQCd4RXzF1b5MmeeErvCkoSgWwmnW32wmayo9G2tzP"
+          # "o1C6zzENmforcwhtcF1omLFgcfNmLoQAzpuwFeUjH6nWzqr");
+      },
+      {
+        derivePath = #extended ([[1, 2, 3, 4, 5], [8, 0, 2, 8, 0, 2]]);
+        serialized = ?("xpub661MyMwAqRbcFUpN6pbTnL6ygjLitCXnjat7UVwyhcU4F2NMRu3KQ8J8bh6h"
+          # "rxHDiG3KdjWTWw9ozxWdFP98W1rCvPjRqWob5QX7RjPJMTj");
       },
     ];
   },
@@ -67,10 +78,6 @@ let derivationVectors: [DerivationVector] = [
         derivePath = #array ([0, 2147483647]);
         serialized = ?("xpub6ASAVgeWMg4pmutghzHG3BohahjwNwPmy2DgM6W9wGegtPrvNgjBwuZRD7hS"
           # "DFhYfunq8vDgwG4ah1gVzZysgp3UsKz7VNjCnSUJJ5T4fdD");
-      },
-      {
-        derivePath = #array ([0, 2147483649]);
-        serialized = null;
       },
       {
         derivePath = #array ([0, 2147483647, 1]);

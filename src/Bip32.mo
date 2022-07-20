@@ -15,6 +15,7 @@ module {
   public type Path = {
     #text : Text;
     #array : [Nat32];
+    #extended: [[Nat8]];
   };
 
   // #publicKeyData is SEC1 encoded public key data.
@@ -106,7 +107,9 @@ module {
             if (not Affine.isOnCurve(parsedPoint)) {
               return null;
             };
-            ?ExtendedPublicKey(keyData, chaincode, depth, index, parentPubKey);
+            let indexBytes = Array.init<Nat8>(4, 0x00);
+            Common.writeBE32(indexBytes, 0, index);
+            ?ExtendedPublicKey(keyData, chaincode, depth, Array.freeze(indexBytes), parentPubKey);
           };
         };
       };
@@ -117,8 +120,15 @@ module {
     };
   };
 
-  func isHardenedIndex(index: Nat32) : Bool {
-    return index >= 0x80000000; // 2**31
+  func arrayPathFromNat32(path: [Nat32]) : [[Nat8]] {
+      let extendedPath : Buffer.Buffer<[Nat8]> = Buffer.Buffer(path.size());
+      for (idx in path.vals()) {
+        let indexBytes : [var Nat8] = Array.init<Nat8>(4, 0x00);
+        Common.writeBE32(indexBytes, 0, idx);
+        extendedPath.add(Array.freeze(indexBytes));
+      };
+
+     return extendedPath.toArray();
   };
 
   // Parses a Text path in the form "m/a/b/c/..." for unsigned integers
@@ -167,7 +177,7 @@ module {
     _key: [Nat8],
     _chaincode : [Nat8],
     _depth: Nat8,
-    _index: Nat32,
+    _index: [Nat8],
     _parentPublicKey: ?ParentPublicKey
     ) {
 
@@ -182,12 +192,15 @@ module {
     public func derivePath(path : Path) : ?ExtendedPublicKey {
       return do ? {
         // Normalize the given path as an array of indices.
-        let pathArray : [Nat32] = switch(path) {
+        let pathArray : [[Nat8]] = switch(path) {
           case (#array path) {
+            arrayPathFromNat32(path);
+          };
+          case (#extended path) {
             path
           };
           case (#text path) {
-            arrayPathFromString(path)!;
+            arrayPathFromNat32(arrayPathFromString(path)!);
           };
         };
 
@@ -202,22 +215,11 @@ module {
       };
     };
 
-    // Derive child at the given index. Valid indices are in the range
-    // [0, 2^31 - 1] and the function throws an error if given an index outside
-    // this range.
-    public func deriveChild(index: Nat32) : ?ExtendedPublicKey {
-      if (isHardenedIndex(index)) {
-        return null;
-      };
-
-      // Compute HMAC with chaincode as the key and the serialized
-      // parentPublicKey (33 bytes) concatenated with the serialized
-      // index (4 bytes) as its data.
-      let hmacData : [var Nat8] = Array.init<Nat8>(33 + 4, 0x00);
-      Common.copy(hmacData, 0, key, 0, 33);
-      Common.writeBE32(hmacData, 33, index);
+    // Derive child at the given index.
+    public func deriveChild(index: [Nat8]) : ?ExtendedPublicKey {
       let hmacSha512 : Hmac.Hmac = Hmac.sha512(chaincode);
-      hmacSha512.write(Array.freeze(hmacData));
+      hmacSha512.write(key);
+      hmacSha512.write(index);
       let fullNode : [Nat8] = hmacSha512.sum();
 
       // Split HMAC output into two 32-byte sequences.
@@ -275,12 +277,12 @@ module {
           result[4] := depth;
           let fingerprint = Hash.hash160(parentPublicKey);
           Common.copy(result, 5, fingerprint, 0, 4);
-          Common.writeBE32(result, 9, index);
+          Common.copy(result, 9, index, 0, 4);
         };
         case (?(#fingerprint fingerprint)) {
           result[4] := depth;
           Common.copy(result, 5, fingerprint, 0, 4);
-          Common.writeBE32(result, 9, index);
+          Common.copy(result, 9, index, 0, 4);
         };
       };
       Common.copy(result, 13, chaincode, 0, 32);
