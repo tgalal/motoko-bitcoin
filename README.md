@@ -29,7 +29,7 @@ additions = [
   },
   { name = "bitcoin"
   , repo = "https://github.com/tgalal/motoko-bitcoin"
-  , version = "current-version-commit-hash"
+  , version = "8615a5f1b699d60b64833622cb128c20a2c8cb6b"
   , dependencies = ["base", "sha"] : List Text
   }
 ] : List Package
