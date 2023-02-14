@@ -1,6 +1,6 @@
 import Array "mo:base/Array";
-import SHA256Digest "../motoko-sha/src/SHA256";
-import SHA512Digest "../motoko-sha/src/SHA512";
+import SHA256Digest "mo:sha/SHA256";
+import SHA512Digest "mo:sha/SHA512";
 
 module {
   public type Digest = {
