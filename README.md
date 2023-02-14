@@ -24,7 +24,7 @@ let
 additions = [
   { name = "sha"
   , repo = "https://github.com/tgalal/motoko-sha"
-  , version = "a6d46445670407d51996c42892f696ed34d6296ba6d46445670407d51996c42892f696ed34d6296bsssjkkkooosfsf"
+  , version = "a6d46445670407d51996c42892f696ed34d6296b"
   , dependencies = ["base"] : List Text
   },
   { name = "bitcoin"
