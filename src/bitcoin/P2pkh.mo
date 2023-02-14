@@ -2,7 +2,7 @@ import Types "./Types";
 import EcdsaTypes "../ecdsa/Types";
 import Ecdsa "../ecdsa/Ecdsa";
 import Base58Check "../Base58Check";
-import SHA256 "../../motoko-sha/src/SHA256";
+import SHA256 "mo:sha/SHA256";
 import Ripemd160 "../Ripemd160";
 import PublicKey "../ecdsa/Publickey";
 import ByteUtils "../ByteUtils";
