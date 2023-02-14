@@ -1,6 +1,6 @@
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
-import SHA256 "../motoko-sha/src/SHA256";
+import SHA256 "mo:sha/SHA256";
 import Base58 "./Base58";
 
 module {

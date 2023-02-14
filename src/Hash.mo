@@ -1,5 +1,5 @@
 import Ripemd160 "./Ripemd160";
-import SHA256 "../motoko-sha/src/SHA256";
+import SHA256 "mo:sha/SHA256";
 
 module {
   // Applies SHA256 followed by RIPEMD160 on the given data.

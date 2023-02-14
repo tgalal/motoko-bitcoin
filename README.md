@@ -5,13 +5,35 @@
 Pull dependencies
 
 ```
-git submodule update --init
+vessel sources
 ```
 
 Run all tests
 
 ```
 make test
+```
+
+## Vessel integration in your code
+
+### package-set.dhall
+
+```dhall
+let
+  -- This is where you can add your own packages to the package-set
+additions = [
+  { name = "bitcoin"
+  , repo = "https://github.com/tgalal/motoko-bitcoin"
+  , version = "current-version-commit-hash"
+  , dependencies = ["base", "sha"] : List Text
+  }
+] : List Package
+```
+
+### vessel.dhall
+
+```dhall
+{ dependencies = [ "base", "sha", "bitcoin" ], compiler = Some "0.6.20" }
 ```
 
 ## Usage
